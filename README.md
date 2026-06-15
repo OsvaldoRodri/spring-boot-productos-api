@@ -2,7 +2,7 @@
 
 REST API de gestión de inventario con Spring Boot 3 y PostgreSQL, con frontend en React y Tailwind CSS. Monorepo con backend y frontend en carpetas separadas.
 
-El dominio es inventario para una paletería, conectado con [heladuck](https://github.com/OsvaldoRodri/heladuck) donde este backend está pensado como reemplazo del stack Express/Prisma actual.
+El dominio es inventario para una paletería, conectado con [sistema-pto-venta-ceili](https://github.com/OsvaldoRodri/sistema-pto-venta-ceili) donde este backend está pensado como reemplazo del stack Express/Prisma actual.
 
 ## Stack
 
