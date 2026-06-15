@@ -1,192 +1,113 @@
-# spring-boot-productos-api 🛒
+# spring-boot-productos-api 🛒🍦
 
-REST API de gestión de productos construida con **Spring Boot 3**, **PostgreSQL** y **Spring Data JPA**.
+Aplicación fullstack de gestión de inventario con **Spring Boot 3** (backend) y **React + Tailwind CSS** (frontend).
 
-Proyecto backend que demuestra arquitectura en capas, CRUD completo, validaciones, manejo de errores y conexión a base de datos real.
-
-El dominio es inventario para una paletería — conectado directamente con el proyecto [HelaDuck](https://github.com/OsvaldoRodri/heladuck), donde este API está pensado como el backend futuro.
+Proyecto organizado como **monorepo** con carpetas separadas por capa — estructura estándar en proyectos profesionales.
 
 ---
 
 ## Stack
 
-| Tecnología | Versión | Rol |
-|-----------|---------|-----|
-| Java | 17 | Lenguaje |
-| Spring Boot | 3.2.5 | Framework principal |
-| Spring Web | incluido | Endpoints REST |
-| Spring Data JPA | incluido | Acceso a datos |
-| Hibernate | incluido | ORM (mapeo objeto-relacional) |
-| PostgreSQL | 18 | Base de datos |
-| Maven | 3.x | Gestión de dependencias |
-| Bean Validation | incluido | `@Valid`, `@NotBlank`, `@Min` |
+| Capa | Tecnología |
+|------|-----------|
+| Backend | Java 17, Spring Boot 3.2, Spring Data JPA, Hibernate |
+| Base de datos | PostgreSQL |
+| Build | Maven |
+| Frontend | React 18, Vite, Tailwind CSS |
+| Comunicación | REST API (JSON) |
 
 ---
 
-## Arquitectura en capas
+## Estructura del proyecto
 
 ```
-ProductoController  ←── recibe HTTP, delega al servicio
-       ↓
-ProductoService     ←── lógica de negocio
-       ↓
-ProductoRepository  ←── acceso a datos (JpaRepository)
-       ↓
-PostgreSQL          ←── persistencia real
+spring-boot-productos-api/
+├── backend/                        ← Spring Boot
+│   ├── pom.xml
+│   └── src/main/java/dev/osvaldo/productos/
+│       ├── ProductosApplication.java
+│       ├── DataLoader.java
+│       ├── model/          Producto.java, Categoria.java
+│       ├── repository/     ProductoRepository.java
+│       ├── service/        ProductoService.java
+│       ├── controller/     ProductoController.java
+│       └── exception/      GlobalExceptionHandler, ErrorResponse, NotFoundException
+│
+└── frontend/                       ← React + Tailwind
+    ├── package.json
+    ├── vite.config.js
+    └── src/
+        ├── App.jsx
+        ├── api/productos.js
+        └── components/
+            ├── ProductoCard.jsx
+            ├── ProductoForm.jsx
+            └── CategoriaBadge.jsx
 ```
-
-```
-src/main/java/dev/osvaldo/productos/
-├── ProductosApplication.java          ← @SpringBootApplication
-├── DataLoader.java                    ← datos de prueba al iniciar
-│
-├── model/
-│   ├── Producto.java                  ← @Entity con validaciones
-│   └── Categoria.java                 ← enum: PALETA, HELADO, BEBIDA, SNACK, OTRO
-│
-├── repository/
-│   └── ProductoRepository.java        ← JpaRepository + custom finders
-│
-├── service/
-│   └── ProductoService.java           ← lógica de negocio, soft delete
-│
-├── controller/
-│   └── ProductoController.java        ← endpoints REST con @RestController
-│
-└── exception/
-    ├── ProductoNotFoundException.java  ← RuntimeException para 404
-    ├── ErrorResponse.java             ← DTO de error estructurado
-    └── GlobalExceptionHandler.java    ← @ControllerAdvice para 404, 400, 500
-```
-
----
-
-## Endpoints
-
-| Método | URL | Descripción | Status |
-|--------|-----|-------------|--------|
-| `GET` | `/api/productos` | Lista todos los productos activos | 200 |
-| `GET` | `/api/productos?nombre=paleta` | Busca por nombre (case-insensitive) | 200 |
-| `GET` | `/api/productos?categoria=HELADO` | Filtra por categoría | 200 |
-| `GET` | `/api/productos/{id}` | Obtiene un producto por ID | 200 / 404 |
-| `POST` | `/api/productos` | Crea un nuevo producto | 201 |
-| `PUT` | `/api/productos/{id}` | Actualiza todos los campos | 200 / 404 |
-| `PATCH` | `/api/productos/{id}/stock?cantidad=50` | Actualiza solo el stock | 200 / 404 |
-| `DELETE` | `/api/productos/{id}` | Soft delete (marca como inactivo) | 204 / 404 |
 
 ---
 
 ## Cómo correr el proyecto
 
-### Requisitos
-- Java 17+
-- Maven 3.x
-- PostgreSQL corriendo localmente
+### Backend (Spring Boot)
 
-### 1. Clonar el repositorio
 ```bash
-git clone https://github.com/OsvaldoRodri/spring-boot-productos-api.git
-cd spring-boot-productos-api
-```
-
-### 2. Crear la base de datos
-```sql
-CREATE DATABASE productos_db;
-```
-
-### 3. Configurar credenciales
-Edita `src/main/resources/application.properties`:
-```properties
-spring.datasource.url=jdbc:postgresql://localhost:5432/productos_db
-spring.datasource.username=tu_usuario
-spring.datasource.password=tu_contraseña
-```
-
-### 4. Correr
-```bash
+cd backend
 mvn spring-boot:run
+# API en http://localhost:8080
+# DataLoader inserta 10 productos de prueba al iniciar
 ```
 
-La API queda disponible en `http://localhost:8080`
+### Frontend (React + Tailwind)
 
-Al iniciar, el `DataLoader` inserta automáticamente 10 productos de prueba.
+```bash
+cd frontend
+npm install
+npm run dev
+# App en http://localhost:5173
+```
+
+Vite redirige `/api/*` a `localhost:8080` automáticamente — sin configuración de CORS.
 
 ---
 
-## Ejemplos de uso
+## Endpoints
 
-### Crear un producto
-```bash
-curl -X POST http://localhost:8080/api/productos \
-  -H "Content-Type: application/json" \
-  -d '{
-    "nombre": "Paleta de Coco",
-    "descripcion": "Paleta artesanal de coco rallado",
-    "precio": 20.00,
-    "stock": 40,
-    "categoria": "PALETA"
-  }'
-```
-
-### Buscar por nombre
-```bash
-curl http://localhost:8080/api/productos?nombre=mango
-```
-
-### Actualizar stock
-```bash
-curl -X PATCH "http://localhost:8080/api/productos/1/stock?cantidad=100"
-```
-
-### Respuesta de error (404)
-```json
-{
-  "timestamp": "2026-06-14T10:30:00",
-  "status": 404,
-  "error": "Not Found",
-  "message": "Producto no encontrado con ID: 99"
-}
-```
+| Método | URL | Descripción |
+|--------|-----|-------------|
+| GET | `/api/productos` | Lista productos activos |
+| GET | `/api/productos?nombre=paleta` | Busca por nombre |
+| GET | `/api/productos?categoria=HELADO` | Filtra por categoría |
+| GET | `/api/productos/{id}` | Obtiene por ID |
+| POST | `/api/productos` | Crea producto |
+| PUT | `/api/productos/{id}` | Actualiza completo |
+| PATCH | `/api/productos/{id}/stock?cantidad=50` | Actualiza stock |
+| DELETE | `/api/productos/{id}` | Soft delete |
 
 ---
 
-## Decisiones técnicas
+## Funcionalidades del frontend
 
-**¿Por qué soft delete y no DELETE real?**
-En inventario real, eliminar un producto de la BD rompe el historial de ventas. Marcarlo como `activo = false` lo oculta de los listados pero preserva la integridad referencial.
-
-**¿Por qué inyección por constructor y no @Autowired en campo?**
-La inyección por constructor hace las dependencias explícitas, facilita los tests unitarios (se puede pasar un mock directamente) y es la práctica recomendada por el equipo de Spring desde Spring 4.
-
-**¿Por qué JpaRepository y no JdbcTemplate?**
-Para un CRUD estándar, JPA elimina el SQL repetitivo y reduce errores. JdbcTemplate tiene su lugar en consultas complejas o de alto rendimiento — para este proyecto JPA es la elección correcta.
-
----
-
-## Estado del proyecto
-
-- [x] CRUD completo de productos
-- [x] Validaciones con Bean Validation
-- [x] Manejo global de errores con @ControllerAdvice
-- [x] Soft delete
-- [x] Búsqueda por nombre y filtro por categoría
-- [x] Datos de prueba automáticos (DataLoader)
-- [ ] Spring Security + JWT (próxima versión)
-- [ ] Tests unitarios con JUnit 5 + Mockito
-- [ ] Dockerización
-- [ ] Deployment en Railway/Render
+- Grid responsivo de productos
+- Búsqueda en tiempo real con debounce
+- Filtro por categoría
+- Stats: total productos, valor de inventario, sin stock
+- CRUD completo desde la UI (crear, editar, eliminar)
+- Indicador visual de stock (verde / amarillo / rojo)
+- Modal de formulario con validación en cliente
 
 ---
 
 ## Conexión con el portafolio
 
-Este proyecto es el backend que eventualmente va a servir al frontend de [HelaDuck](https://github.com/OsvaldoRodri/heladuck) — reemplazando Express/Prisma por Spring Boot/JPA para el sistema de punto de venta de la paletería familiar.
+Backend pensado para reemplazar Express/Prisma en [HelaDuck](https://github.com/OsvaldoRodri/heladuck), migrando a un stack Java profesional.
 
 ---
 
 ![Java](https://img.shields.io/badge/Java-17-orange?logo=java)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.2-6DB33F?logo=springboot)
+![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-4479A1?logo=postgresql)
-![Maven](https://img.shields.io/badge/Maven-3.x-C71A36?logo=apachemaven)
+![Tailwind](https://img.shields.io/badge/Tailwind_CSS-3-06B6D4?logo=tailwindcss)
 
-*Parte del portafolio de [Osvaldo Rodríguez](https://github.com/OsvaldoRodri)*
+*Portafolio de [Osvaldo Rodríguez](https://github.com/OsvaldoRodri)*
