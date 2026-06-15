@@ -1,0 +1,14 @@
+# Maven
+target/
+*.class
+*.jar
+
+# IDE
+.idea/
+*.iml
+.vscode/
+nbproject/
+
+# Spring Boot
+*.log
+application-local.properties
