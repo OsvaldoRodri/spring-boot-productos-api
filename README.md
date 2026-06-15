@@ -1,28 +1,19 @@
-# spring-boot-productos-api 🛒🍦
+# spring-boot-productos-api
 
-Aplicación fullstack de gestión de inventario con **Spring Boot 3** (backend) y **React + Tailwind CSS** (frontend).
+REST API de gestión de inventario con Spring Boot 3 y PostgreSQL, con frontend en React y Tailwind CSS. Monorepo con backend y frontend en carpetas separadas.
 
-Proyecto organizado como **monorepo** con carpetas separadas por capa — estructura estándar en proyectos profesionales.
-
----
+El dominio es inventario para una paletería, conectado con [heladuck](https://github.com/OsvaldoRodri/heladuck) donde este backend está pensado como reemplazo del stack Express/Prisma actual.
 
 ## Stack
 
-| Capa | Tecnología |
-|------|-----------|
-| Backend | Java 17, Spring Boot 3.2, Spring Data JPA, Hibernate |
-| Base de datos | PostgreSQL |
-| Build | Maven |
-| Frontend | React 18, Vite, Tailwind CSS |
-| Comunicación | REST API (JSON) |
+Backend: Java 17, Spring Boot 3.2, Spring Data JPA, Hibernate, Maven, PostgreSQL  
+Frontend: React 18, Vite, Tailwind CSS
 
----
-
-## Estructura del proyecto
+## Estructura
 
 ```
 spring-boot-productos-api/
-├── backend/                        ← Spring Boot
+├── backend/
 │   ├── pom.xml
 │   └── src/main/java/dev/osvaldo/productos/
 │       ├── ProductosApplication.java
@@ -31,9 +22,8 @@ spring-boot-productos-api/
 │       ├── repository/     ProductoRepository.java
 │       ├── service/        ProductoService.java
 │       ├── controller/     ProductoController.java
-│       └── exception/      GlobalExceptionHandler, ErrorResponse, NotFoundException
-│
-└── frontend/                       ← React + Tailwind
+│       └── exception/      GlobalExceptionHandler.java, ErrorResponse.java
+└── frontend/
     ├── package.json
     ├── vite.config.js
     └── src/
@@ -45,69 +35,45 @@ spring-boot-productos-api/
             └── CategoriaBadge.jsx
 ```
 
----
-
-## Cómo correr el proyecto
-
-### Backend (Spring Boot)
+## Cómo correr
 
 ```bash
+# Crear la base de datos
+psql -U postgres -c "CREATE DATABASE productos_db;"
+
+# Backend
 cd backend
 mvn spring-boot:run
-# API en http://localhost:8080
-# DataLoader inserta 10 productos de prueba al iniciar
-```
 
-### Frontend (React + Tailwind)
-
-```bash
+# Frontend (otra terminal)
 cd frontend
 npm install
 npm run dev
-# App en http://localhost:5173
 ```
 
-Vite redirige `/api/*` a `localhost:8080` automáticamente — sin configuración de CORS.
-
----
+La API queda en `http://localhost:8080` y el frontend en `http://localhost:5173`. Vite redirige `/api/*` a `localhost:8080` sin configuración adicional de CORS.
 
 ## Endpoints
 
-| Método | URL | Descripción |
-|--------|-----|-------------|
-| GET | `/api/productos` | Lista productos activos |
-| GET | `/api/productos?nombre=paleta` | Busca por nombre |
-| GET | `/api/productos?categoria=HELADO` | Filtra por categoría |
-| GET | `/api/productos/{id}` | Obtiene por ID |
-| POST | `/api/productos` | Crea producto |
-| PUT | `/api/productos/{id}` | Actualiza completo |
-| PATCH | `/api/productos/{id}/stock?cantidad=50` | Actualiza stock |
-| DELETE | `/api/productos/{id}` | Soft delete |
+```
+GET    /api/productos
+GET    /api/productos?nombre=paleta
+GET    /api/productos?categoria=HELADO
+GET    /api/productos/{id}
+POST   /api/productos
+PUT    /api/productos/{id}
+PATCH  /api/productos/{id}/stock?cantidad=50
+DELETE /api/productos/{id}
+```
 
----
+## Decisiones de diseño
 
-## Funcionalidades del frontend
+El delete es soft: marca el producto como `activo = false` en lugar de eliminarlo. En inventario real, borrar un producto rompe el historial de transacciones.
 
-- Grid responsivo de productos
-- Búsqueda en tiempo real con debounce
-- Filtro por categoría
-- Stats: total productos, valor de inventario, sin stock
-- CRUD completo desde la UI (crear, editar, eliminar)
-- Indicador visual de stock (verde / amarillo / rojo)
-- Modal de formulario con validación en cliente
+La inyección de dependencias es por constructor porque hace las dependencias explícitas y facilita los tests.
 
----
+Los finders del repositorio (`findByNombreContainingIgnoreCase`, `findByCategoria`) los genera Spring Data a partir del nombre del método, sin SQL manual.
 
-## Conexión con el portafolio
+## Estado
 
-Backend pensado para reemplazar Express/Prisma en [HelaDuck](https://github.com/OsvaldoRodri/heladuck), migrando a un stack Java profesional.
-
----
-
-![Java](https://img.shields.io/badge/Java-17-orange?logo=java)
-![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.2-6DB33F?logo=springboot)
-![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-4479A1?logo=postgresql)
-![Tailwind](https://img.shields.io/badge/Tailwind_CSS-3-06B6D4?logo=tailwindcss)
-
-*Portafolio de [Osvaldo Rodríguez](https://github.com/OsvaldoRodri)*
+CRUD completo, validaciones con Bean Validation, manejo global de errores con `@ControllerAdvice`, datos de prueba con `CommandLineRunner`. Pendiente: Spring Security con JWT, tests con JUnit 5, Dockerfile.
